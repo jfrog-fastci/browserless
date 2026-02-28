@@ -2,10 +2,20 @@ name: Lint
 
 on: [workflow_call]
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   Lint:
     runs-on: ubuntu-24.04
     steps:
+      - uses: jfrog-fastci/fastci@v0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          create_issues_from_insights: "true"
+          accept_terms: "yes"
+
       - uses: actions/checkout@v2
       - name: Install modules
         uses: nick-fields/retry@v3

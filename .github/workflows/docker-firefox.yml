@@ -2,6 +2,10 @@ name: Firefox
 
 on: [workflow_call]
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   Test:
     runs-on: ubuntu-24.04
@@ -9,6 +13,12 @@ jobs:
       matrix:
         node-version: ['v24.14.0']
     steps:
+      - uses: jfrog-fastci/fastci@v0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          create_issues_from_insights: "true"
+          accept_terms: "yes"
+
       - uses: actions/checkout@v2
 
       - name: Build the base layer

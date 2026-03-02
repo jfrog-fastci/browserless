@@ -1,19 +1,39 @@
 name: FastCI Agent
 
-on:
-  issues:
-    types: [opened, reopened]
-
 permissions:
   contents: write
   pull-requests: write
   issues: write
 
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "Issue number to fix"
+        required: true
+        type: number
+      issue_title:
+        description: "Issue title"
+        required: false
+        type: string
+      issue_body:
+        description: "Issue body"
+        required: false
+        type: string
+  schedule:
+    - cron: "0 0 * * *"
+
 jobs:
   attempt-fix:
-    if: contains(github.event.issue.labels.*.name, 'fastci-insight') || startsWith(github.event.issue.title, '[FastCI]')
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
+      - uses: jfrog-fastci/fastci@v0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          create_issues_from_insights: "true"
+          accept_terms: "yes"
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -21,9 +41,9 @@ jobs:
       - name: Setup
         id: setup
         env:
-          ISSUE_BODY: ${{ github.event.issue.body }}
-          ISSUE_TITLE: ${{ github.event.issue.title }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_BODY: ${{ github.event.inputs.issue_body || github.event.issue.body || '' }}
+          ISSUE_TITLE: ${{ github.event.inputs.issue_title || github.event.issue.title || 'fix' }}
+          ISSUE_NUMBER: ${{ github.event.inputs.issue_number || github.event.issue.number }}
         run: |
           curl https://cursor.com/install -fsS | bash
           echo "$HOME/.cursor/bin" >> $GITHUB_PATH
@@ -42,12 +62,12 @@ jobs:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
           GH_TOKEN: ${{ secrets.GH_PAT }}
           BRANCH: ${{ steps.setup.outputs.branch }}
-          ISSUE_NUM: ${{ github.event.issue.number }}
+          ISSUE_NUM: ${{ github.event.inputs.issue_number || github.event.issue.number }}
           REPO: ${{ github.repository }}
         run: |
           agent -p "Fix CI issue in $REPO. GitHub CLI (\`gh\`) is authenticated.
 
-          Issue #$ISSUE_NUM: ${{ github.event.issue.title }}
+          Issue #$ISSUE_NUM: ${{ github.event.inputs.issue_title || github.event.issue.title }}
           Task: $(cat /tmp/ai_prompt.txt)
 
           Steps:

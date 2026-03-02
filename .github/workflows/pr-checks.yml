@@ -1,6 +1,13 @@
 name: Pull Request Checks
 
-on: [pull_request]
+permissions:
+  contents: read
+  issues: write
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
 
 jobs:
   lint:

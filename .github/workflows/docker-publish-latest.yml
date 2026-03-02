@@ -1,13 +1,13 @@
 name: Publish Latest Docker Images to GitHub Container Registry
 
-on:
-  push:
-    branches:
-      - main
-
 permissions:
   contents: read
   issues: write
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
 
 jobs:
   push_to_registry:
